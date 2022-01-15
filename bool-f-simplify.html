@@ -1,0 +1,369 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>Simplify boolean function</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css"/>
+		<link rel="stylesheet" href="css/main.css"/>
+	</head>
+	
+	<body>		
+		<div class="card jumbotron text-center" id="ContainerHome">
+			<button class="btn btn-error">Give function by formula</button><br/>
+			<button class="btn btn-primary" onclick="showContainerTable()">Give function by table of values</button>
+		</div>
+		<div class="card jumbotron text-center" id="ContainerTable">
+			<span>Number of arguments:</span>
+			<span class="numinput">
+				<input id="ArgsCount" type="number" min="2" max="5" value="4" 
+					onchange="generateValuesTable()"
+					onkeydown="e.preventDefault()"></input>
+			</span>
+			<center><table id="ValuesTable" class="table-bordered">
+			</table></center><br/>
+			
+			<button class="btn btn-primary" onclick="launchSolve('V')">Simplify (Veitch)</button>
+			<button class="btn btn-primary" onclick="launchSolve('K')">Simplify (Karnaugh)</button>
+			<button class="btn btn-primary" onclick="launchSolve('Q')">Simplify (Quine McClusky)</button><br/>
+		</div>
+		
+		<div class="card jumbotron text-center" id="ContainerSolve">
+			<h3>Solving by <span id="SolverName">...</span></h3>
+			
+			<div id="SolverError" style="display:none">
+			
+			</div>
+			
+			<div id="SolverContent">				
+			</div>
+		</div>
+		
+	</body>	
+	
+	<script src="js/jquery.min.js"></script>	
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/bootstrap.bundle.js"></script>
+	
+	
+	<script src="solvers/bool-alg.js"></script>    
+        
+	<script>
+		// global solving stats
+
+		f_argscnt = 0;
+		f_values = [];
+
+		function resetSolveData() {
+			f_argscnt = 0;
+			f_values = [];
+		}
+	
+	</script>    
+        
+	<script>			
+		// values table
+		var ArgsCountEl = document.getElementById("ArgsCount");		
+		var ValuesTableEl = document.getElementById("ValuesTable");
+		
+		generateValuesTable();		
+		
+		function generateValuesTable() {
+			ValuesTable.innerHTML="";
+			var argscnt = ArgsCountEl.value;
+			
+			argsstr = "";
+			tr = document.createElement("tr");
+			for(i=0;i<argscnt;i++) {			
+				th = document.createElement("th");
+				th.className="val01";
+				th.innerHTML = "x<sub>"+(i+1)+"</sub>";
+				tr.append(th);
+				
+				if(argsstr=="") {
+					argsstr="x<sub>"+(i+1)+"</sub>";
+				}
+				else {
+					argsstr+=", x<sub>"+(i+1)+"</sub>";
+				}				
+			}
+			
+			th = document.createElement("th");
+				th.className="val01";
+				th.innerHTML = "f("+argsstr+")";
+				tr.append(th);
+			
+			ValuesTable.append(tr);
+			
+			
+			var numrows = pow2(argscnt);
+			
+			for(var i=0;i<numrows;i++) {
+				tr = document.createElement("tr");
+				
+				var args = getBits(i,argscnt);
+				for(var j=0;j<argscnt;j++) {
+					th = document.createElement("th");
+					th.className="val01";
+					th.innerHTML = ""+args[j];
+					tr.append(th);											
+				}
+				
+				
+				th = document.createElement("th");
+				th.className="val01";
+				th.innerHTML = "<button class='fval btn' onclick='btninChangeBit(this)'>0</button>";								
+				
+				
+				tr.append(th);											
+				
+				ValuesTable.append(tr);
+			}						
+		}		
+		
+		function pow2(n) {
+			return Math.pow(2,n);
+		}
+		
+		function getBits(n,lstcnt) {
+			lst = [];
+			while(n>0 && lst.length<lstcnt) {				
+				lst.push(n%2);
+				n=Math.floor(n/2);
+			}
+			while(lst.length<lstcnt) {				
+				lst.push(0);			
+			}
+			
+			lst.reverse();
+			return lst;
+		}
+		
+		function btninChangeBit(btn){			
+			if(btn.innerHTML=='0') {
+				btn.innerHTML='1';
+			}
+			else {
+				btn.innerHTML='0';
+			}
+		}
+	</script>  	
+	
+	<script>
+		// solve
+		var SolverNameEl = document.getElementById("SolverName");
+		var SolverErrorEl = document.getElementById("SolverError");
+		var SolverContentEl = document.getElementById("SolverContent");
+
+        function solverAddValsTable() {
+            var cloneTable = ValuesTableEl.cloneNode(true);
+            cloneTable.innerHTML = cloneTable.innerHTML.replaceAll("fval btn","btn btn-disabled readonlyval");
+            cloneTable.innerHTML = cloneTable.innerHTML.replaceAll('onclick="btninChangeBit(this)"',"disabled");            
+            var center = document.createElement("center");
+            center.appendChild(cloneTable)
+            ContainerSolveEl.insertBefore(center,SolverNameEl.parentNode);
+        }
+        
+		function solverAddImage(path) {
+			var img = document.createElement("img");
+			img.src=path;
+			img.style.maxWidth="600px";
+			img.style.width="100%";
+			SolverContent.appendChild(img);
+			SolverContent.appendChild(document.createElement("br"));
+		}
+		
+		function solverAddText(text, mathstyle=false) {
+			var p = document.createElement("p");
+			p.innerHTML=text;
+			if(mathstyle) {
+				p.style.fontFamily="Cambria Math";
+				p.style.fontStyle="italic";
+                p.style.fontSize="16px";
+			}
+			SolverContent.appendChild(p);
+		}		
+		
+		function solverAddElement(el) {
+			SolverContent.appendChild(el);
+		}
+		
+		function solverError(msg) {
+			SolverContentEl.style.display="none";
+			SolverErrorEl.innerHTML = "<h4 style='color:red'>"+msg+"</h4>";
+			SolverErrorEl.style.display="block";
+		}
+		
+		function launchSolve(method) {
+			resetSolveData();
+			f_argscnt = ArgsCountEl.value;
+			var fvalels = document.getElementsByClassName("fval");
+			for(i=0;i<fvalels.length;i++) {
+				f_values.push(parseInt(fvalels[i].innerHTML));
+			}
+			console.log(f_argscnt);
+			console.log(f_values);
+			
+			if(method=="V") {
+                
+				SolverNameEl.innerHTML="Veitch";
+				
+				if(f_argscnt>4) {
+					solverError("Can't apply Veitch on a boolean function with more than 4 arguments!");
+					showContainerSolve();
+					return;
+				}
+			}
+			else if(method=="K") {
+                
+				SolverNameEl.innerHTML="Karnaugh";
+				
+				if(f_argscnt>4) {
+					solverError("Can't apply Karnaugh on a boolean function with more than 4 arguments!");
+					showContainerSolve();
+					return;
+				}
+			}
+			else if(method=="Q") {
+				SolverNameEl.innerHTML="Quine McClusky";							
+			}
+			else {
+				solverError("Unknown method");
+				showContainerSolve();
+				return;
+			}
+			
+			
+			var solver = new BoolSimplifierSolver(f_argscnt,f_values, method);
+
+			solver.compute(method=='Q');
+
+            solverAddValsTable();
+            
+			if(method=="V" || method=="K") {
+				solverAddImage(solver.canvas64());
+				solverAddText(solver.getMintermsListString(),true);
+							
+				solverAddText(solver.maxtermsHTML,true);				
+			}
+			else if(method=="Q") {				
+				solverAddElement(solver.qTable1);
+				
+			}
+			
+			solverAddText(solver.maximalMonomsSetHTML,true);
+			if(method=="Q") {
+				solverAddElement(solver.qTable2);
+			}
+			solverAddText(solver.centralMonomsSetHTML,true);
+			solverAddText("<b>Case "+solver.simplificationCase+"</b>");
+			if(solver.simplificationCase==1) {				
+				solverAddText("<h6>Solution</h6>");
+				solverAddText(`${solver.getFuncWithParamsHTML("f")}=${solver.maxDisjointHTML()}<br/>=${solver.minsDisjointHTML()}<br/>=${solver.minsDisjointExplicitHTML()}`,true);
+			}
+			else if(solver.simplificationCase==2) {				
+				solverAddText(`${solver.getFuncWithParamsHTML("g")}=${solver.censDisjointHTML()}`,true);
+				solverAddText(solver.hFuncsHTML(),true);			
+				solverAddText("<h6>Solution</h6>");
+				solverAddText(solver.sols23HTML(),true);
+			}
+			
+			
+			
+			ContainerSolveEl.style.display="block";						
+			showContainerSolve();
+			
+		}		
+	
+	</script>
+	
+	<script>
+		// container selectors
+		var ContainerHomeEl = document.getElementById("ContainerHome");		
+		var ContainerTableEl = document.getElementById("ContainerTable");		
+		var ContainerSolveEl = document.getElementById("ContainerSolve");
+		
+		showContainerHome();
+		
+		function hideAllCards() {
+			var cards = document.getElementsByClassName("card");
+			for(var i=0;i<cards.length;i++) {				
+				cards[i].style.display="none";
+			}
+		}
+				
+		
+		function showContainerHome() {
+			hideAllCards();
+			ContainerHomeEl.style.display="block";
+		}
+		
+		function showContainerTable() {
+			hideAllCards();
+			ContainerTableEl.style.display="block";
+		}
+		
+		function showContainerSolve() {
+			hideAllCards();			
+			ContainerSolveEl.style.display="block";
+		}
+	</script>
+    
+    <script>
+        // get parameters
+        
+        let params = (new URL(location)).searchParams;
+        params=params.toString();
+        console.log(params.toString());
+        if(params.length>1) {
+            var method=params[0];            
+            if(method=='V' || method=='K' || method=='Q') {                                        
+                var bits=params.substring(1).slice(0,-1);
+                console.log(method+" "+bits);
+                console.log(bits.length);
+                var b10ok=true;
+                for(var i=0;i<bits.length && b10ok;i++) {
+                    b10ok = bits[i]=='0' || bits[i]=='1';
+                }
+                if(b10ok) {
+                    if(bits.length==4) {
+                        ArgsCountEl.value=2;
+                        generateValuesTable();
+                        showContainerTable();
+                    }
+                    else if(bits.length==8) {
+                        ArgsCountEl.value=3;
+                        generateValuesTable();
+                        showContainerTable();
+                    }                    
+                    else if(bits.length==16) {
+                        ArgsCountEl.value=4;
+                        generateValuesTable();
+                        showContainerTable();                    
+                    }  
+                    if(bits.length==4 || bits.length==8 || bits.length==16) {
+                        for(var i=0;i<bits.length;i++) {                    
+                            if(bits[i]=='1'){
+                                document.getElementsByClassName('fval')[i].click();
+                            }
+                        }
+                        launchSolve(method);
+                    }
+                }                
+            }            
+        }
+    </script>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
