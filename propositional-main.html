@@ -62,7 +62,7 @@
 					<!--imply-->					
 					<button class="btn btn-light col-sm-1 col-1 btn-calc">&#x2192;</button>
 					<!--equivalent-->
-					<button class="btn btn-light col-sm-1 col-1 btn-calc">&#x2194;&#xFE0E;</button>
+					<button class="btn btn-light col-sm-1 col-1 btn-calc">&#x2194;</button>
 					<div class="col-sm-3 col-3"></div>
 				</div>
 				<div class="row">
@@ -73,7 +73,7 @@
 				</div>
 				
 				<button id="TruthTableBtn" class="btn btn-primary">Truth table</button>
-				<button class="btn">Check if Tautology (Semantic tables)</button>
+				<a href="bool-f-simplify.html"><button class="btn">Check if Tautology (Semantic tables)</button></a>	
 			</div>
 						
 			<!--a href="bool-f-simplify.html"><button class="btn btn-primary">Simplify Boolean function</button></a!-->	
@@ -150,11 +150,7 @@
 		
 		function viewerBack(text) {
 			var viewer=$('#Viewer')[0];
-			if(viewer.value.length==0) return;
-			var last = viewer.value[viewer.value.length-1];
-			if(last=="\uFE0E") {
-				viewer.value = viewer.value.slice(0, -1);
-			}
+			if(viewer.value.length==0) return;			
 			viewer.value = viewer.value.slice(0, -1);
 		}
 		
@@ -186,7 +182,7 @@
 				if(text[i]=="\u2192") {
 					result.push("imp"); continue;
 				}
-				if(text[i]=="\u2194&#xFE0E;") {
+				if(text[i]=="\u2194") {
 					result.push("eqv"); continue;
 				}
 				if(text[i]=="\u2191") {
