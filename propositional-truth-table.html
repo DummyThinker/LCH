@@ -35,7 +35,12 @@
 		}		
 		
 		var prop = new Proposition(tokens);
-		prop.evaluate();
+		try{
+			prop.evaluate();
+		}
+		catch(e) {
+			window.location.href = "propositional-main.html";
+		}
 		console.log(prop.evaldbg);
 		
 		var header=document.createElement("tr");

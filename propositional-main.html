@@ -62,7 +62,7 @@
 					<!--imply-->					
 					<button class="btn btn-light col-sm-1 col-1 btn-calc">&#x2192;</button>
 					<!--equivalent-->
-					<button class="btn btn-light col-sm-1 col-1 btn-calc">&#x2194;</button>
+					<button class="btn btn-light col-sm-1 col-1 btn-calc">&#x2194;&#xFE0E;</button>
 					<div class="col-sm-3 col-3"></div>
 				</div>
 				<div class="row">
@@ -73,7 +73,7 @@
 				</div>
 				
 				<button id="TruthTableBtn" class="btn btn-primary">Truth table</button>
-				<a href="bool-f-simplify.html"><button class="btn">Check if Tautology (Semantic tables)</button></a>	
+				<button class="btn">Check if Tautology (Semantic tables)</button>
 			</div>
 						
 			<!--a href="bool-f-simplify.html"><button class="btn btn-primary">Simplify Boolean function</button></a!-->	
@@ -123,6 +123,14 @@
 					return;
 				}
 				
+				try{
+					prop.evaluate();
+				}
+				catch(e) {
+					$("#Err").eq(0).html("Parse error");
+					return;
+				}
+				
 				var url="propositional-truth-table.html?f="+tokens.join("_");
 				window.location.href=url;
 				
@@ -142,6 +150,11 @@
 		
 		function viewerBack(text) {
 			var viewer=$('#Viewer')[0];
+			if(viewer.value.length==0) return;
+			var last = viewer.value[viewer.value.length-1];
+			if(last=="\uFE0E") {
+				viewer.value = viewer.value.slice(0, -1);
+			}
 			viewer.value = viewer.value.slice(0, -1);
 		}
 		
@@ -173,7 +186,7 @@
 				if(text[i]=="\u2192") {
 					result.push("imp"); continue;
 				}
-				if(text[i]=="\u2194") {
+				if(text[i]=="\u2194&#xFE0E;") {
 					result.push("eqv"); continue;
 				}
 				if(text[i]=="\u2191") {

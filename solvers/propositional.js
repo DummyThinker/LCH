@@ -158,7 +158,7 @@ function tokenToString(token) {
 	if(token=="and") return "\u2227";
 	if(token== "or") return "\u2228";
 	if(token=="imp") return "\u2192";
-	if(token=="eqv") return "\u2194";
+	if(token=="eqv") return "\u2194&#xFE0E;";
 	if(token=="nnd") return "\u2191";
 	if(token=="nor") return "\u2193";	
 	if(/[a-zA-z]/.test(token)) return token;
