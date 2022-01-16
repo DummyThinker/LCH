@@ -107,8 +107,8 @@ function Proposition(tokens) {
 		this.evaldbg={};
 		var value = this.compute(this.polish.length-1);
 		var keys= Object.keys(this.evaldbg);
-		keys.sort((u,v)=>{return u.length-v.length});
-		console.log(keys);
+		keys.sort((u,v)=>{if(u.length!=v.length) return u.length-v.length; return u<v?-1:1;});
+		//console.log(keys);
 		var dbg = [];
 		for(var i=0;i<keys.length;i++) {
 			dbg.push([keys[i],this.evaldbg[keys[i]]]);
@@ -124,25 +124,25 @@ function Proposition(tokens) {
 		var tk = this.polish[ppos];
 		if(tk in symbols) {
 			this.evaldbg[tk]=this.variables[tk];
-			console.log(tk);
+			//console.log(tk);
 			return [this.variables[tk],1,tk];
 		}
 		if(tk == "not") {			
 			var c=this.compute(ppos-1);
 			this.evaldbg[tokenToString("not")+c[2]]=!c[0];
-			console.log(tokenToString("not")+c[2]);
+			//console.log(tokenToString("not")+c[2]);
 			return [!c[0],1+c[1],tokenToString("not")+c[2]];
 		}
 		if(tk in operators) {
 			var right = this.compute(ppos-1);
 			var left = this.compute(ppos-1-right[1]);			
 			var txtr = right[2];
-			console.log(left);
+			//console.log(left);
 			var txtl = left[2];			
 			if(txtr.length>1) txtr="("+txtr+")";
 			if(txtl.length>1) txtl="("+txtl+")";
 				
-			console.log(txtl+tokenToString(tk)+txtr);
+			//console.log(txtl+tokenToString(tk)+txtr);
 			this.evaldbg[txtl+tokenToString(tk)+txtr]=operators[tk].op(left[0],right[0]);
 			return [operators[tk].op(left[0],right[0]),1+left[1]+right[1],txtl+tokenToString(tk)+txtr];
 		}						

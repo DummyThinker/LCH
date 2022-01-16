@@ -35,8 +35,8 @@
 		}		
 		
 		var prop = new Proposition(tokens);
-		console.log(prop.evaluate());
-		console.log(prop.evaldbg);
+		//console.log(prop.evaluate());
+		//console.log(prop.evaldbg);
 		
 		var header=document.createElement("tr");
 		for(var i=0;i<prop.evaldbg.length;i++) {
@@ -52,7 +52,7 @@
 		console.log(n);
 		for(var i=0;i<n;i++) {
 			var bits = getBits(i,k);
-			console.log(bits);			
+			//console.log(bits);			
 			for(var j=0;j<k;j++) {
 				prop.variables[keys[j]]=(bits[j]==1);
 			}
