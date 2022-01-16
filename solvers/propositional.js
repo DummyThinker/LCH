@@ -181,7 +181,9 @@ PropositionalNode.prototype.isLiteral = function() {
 }
 
 PropositionalNode.prototype.negate = function() {
-	return new PropositionalNode("not", this);
+	if(this.token!="not")
+		return new PropositionalNode("not", this);
+	return this.left;
 }
 
 function propagateNegation(pNode, applyToChildren=false) {
@@ -362,10 +364,10 @@ function decompose(root) {
 			return ["b",root.left.negate(),root.right.negate()];
 		}
 		if(root.token=="or") {
-			return ["b",root.left.negate(),root.right.negate()];
+			return ["a",root.left.negate(),root.right.negate()];
 		}
 		if(root.token=="imp") {
-			return ["b", root.left, root.right.negate()];
+			return ["a", root.left, root.right.negate()];
 		}
 	}
 	return [];
@@ -465,8 +467,99 @@ function createSemanticTable(root) {
 	}				
 	
 	console.log(result);	
+		
 	
-	// develop alpha
+	var depth=1;
+	
+	var node = result;
+	while(node.children.length>0){
+		node = node.children[0];
+		depth++;
+	}
+	depth++;
+	
+	
+	var table = document.createElement("table");
+	
+	for(var i=0;i<2*depth;i++) {		
+		table.appendChild(document.createElement("tr"));
+	}	
+	
+	
+	var threads=1;
+	var node = result;
+	var depth=1;
+	
+	var td = document.createElement("td");
+	td.innerHTML = node.tag.toString() + `&nbsp;&nbsp;&nbsp;<b>(${result.id})</b>`;
+	td.innerHTML = `&nbsp;&nbsp;&nbsp;<b style="color:transparent">(${result.id})</b>` + td.innerHTML;
+	table.children[0].appendChild(td);	
+	
+	
+	while(node.children.length>0) {				
+		for(var i=0;i<threads;i++) {
+			var td = document.createElement("td");
+			td.innerHTML = node.children[0].tag.toString();			
+			if(node.children[0].id!=0) {
+				td.innerHTML += `&nbsp;&nbsp;&nbsp;<b>(${node.children[0].id})</b>`;
+				td.innerHTML = `&nbsp;&nbsp;&nbsp;<b style="color:transparent">(${node.children[0].id})</b>`+td.innerHTML;
+			}			
+			table.children[2*depth].appendChild(td);
+			
+			
+			var td = document.createElement("td");
+			var f0 = node.children[0].formation[0];
+			var f1 = node.children[0].formation[1];
+			
+			if(f0!="x"){				
+				td.innerHTML = `<i>${f0}(${f1})</i>`;
+				if(f0=='a') {
+					td.innerHTML = `<i style="color:transparent">${f0}(${f1})</i>&nbsp;|&nbsp;<i>${f0}(${f1})</i>`;
+				}
+				else if(f0=='b') {
+					td.innerHTML = `<i style="color:transparent">${f0}(${f1})</i>/&nbsp;   &nbsp;\\<i>${f0}(${f1})</i>`;
+				}
+			}
+			else {
+				td.innerHTML="|";
+			}
+			table.children[2*depth-1].appendChild(td);
+			
+			if(node.children.length==2) {
+				var td = document.createElement("td");
+				td.innerHTML = node.children[1].tag.toString();
+				if(node.children[1].id!=0) {
+					td.innerHTML += `&nbsp;&nbsp;&nbsp;<b>(${node.children[1].id})</b>`;
+					td.innerHTML = `&nbsp;&nbsp;&nbsp;<b style="color:transparent">(${node.children[1].id})</b>`+td.innerHTML;
+				}				
+				table.children[2*depth].appendChild(td);
+			}
+		}
+		threads*=node.children.length;
+		
+		node = node.children[0];
+		depth++;
+	}
+	
+	for(var i=0;i<table.children.length;i++) {
+		var row = table.children[i];
+		var cnt = depth/row.children.length;
+		for(var j=0;j<row.children.length;j++) {			
+			row.children[j].colSpan=cnt;
+			row.children[j].style.textAlign="center";
+		}
+	}
+	
+	
+	
+	console.log(table);
+	
+	var center=document.createElement("center");
+	center.appendChild(table);
+	
+	console.log(depth);
+	
+	return center;		
 }
 
 

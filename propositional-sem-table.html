@@ -9,12 +9,9 @@
 	</head>
 	
 	<body>
-		<div class="jumbotron text-center">
+		<div class="jumbotron text-center" id="Container">
 			<h2>Semantic tables</h2>
-			<p>Solving for tautology: <span id="Expr"></span></p>
-			
-			<h5>Formula negation</h5>
-			<span id="Neg"></span></p>
+			<p>Solving by semantic table: <span id="Expr"></span></p>			
 		</div>		
 		
 	</body>	
@@ -43,15 +40,8 @@
 		}
 		
 		var root = new PropositionalTree(prop).root;
-		//root = new PropositionalNode("not",root);		
-		console.log(root.toString());
-		
-		$("#Neg")[0].innerHTML += root.toString() + " = </br>";
-		
-		//root = propagateNegation(root,true);
-		$("#Neg")[0].innerHTML += root.toString() + "</br>";
 				
-		createSemanticTable(root);
+		$("#Container")[0].appendChild(createSemanticTable(root));
 		
 	</script>
 	
