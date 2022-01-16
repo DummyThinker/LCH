@@ -10,11 +10,11 @@
 	
 	<body>
 		<div class="jumbotron text-center">
-			<h2>Truth table</h2>
-			<p>Solving <span id="Expr"></span></p>
-			<center><table id="Table" class="table-bordered minw">
+			<h2>Semantic tables</h2>
+			<p>Solving for tautology: <span id="Expr"></span></p>
 			
-			</table></center>
+			<h5>Formula negation</h5>
+			<span id="Neg"></span></p>
 		</div>		
 		
 	</body>	
@@ -28,7 +28,7 @@
 	
 	<script>
 		const tokens = new URLSearchParams(window.location.search).get("f").split("_");
-		console.log(tokens);
+		//console.log(tokens);
 		
 		for(var i=0;i<tokens.length;i++) {
 			$("#Expr")[0].innerHTML += tokenToString(tokens[i]);
@@ -42,35 +42,16 @@
 			window.location.href = "propositional-main.html";
 		}
 		
-		var header=document.createElement("tr");
-		for(var i=0;i<prop.evaldbg.length;i++) {
-			var th=document.createElement("th");
-			th.innerHTML=prop.evaldbg[i][0];
-			header.appendChild(th);
-		}		
-		$("#Table")[0].appendChild(header);
+		var root = new PropositionalTree(prop).root;
+		//root = new PropositionalNode("not",root);		
+		console.log(root.toString());
 		
-		var keys=Object.keys(prop.variables);
-		var k = keys.length;
-		var n = Math.pow(2,k);
-		console.log(n);
-		for(var i=0;i<n;i++) {
-			var bits = getBits(i,k);
-			//console.log(bits);			
-			for(var j=0;j<k;j++) {
-				prop.variables[keys[j]]=(bits[j]==1);
-			}
-			prop.evaluate();
-			
-			var row=document.createElement("tr");
-			for(var p=0;p<prop.evaldbg.length;p++) {
-				var tr=document.createElement("td");
-				tr.innerHTML=prop.evaldbg[p][1] ? "T" : "F";
-				row.appendChild(tr);
-			}		
-			$("#Table")[0].appendChild(row);
-			
-		}			
+		$("#Neg")[0].innerHTML += root.toString() + " = </br>";
+		
+		//root = propagateNegation(root,true);
+		$("#Neg")[0].innerHTML += root.toString() + "</br>";
+				
+		createSemanticTable(root);
 		
 	</script>
 	

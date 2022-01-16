@@ -73,7 +73,7 @@
 				</div>
 				
 				<button id="TruthTableBtn" class="btn btn-primary">Truth table</button>
-				<a href="bool-f-simplify.html"><button class="btn">Check if Tautology (Semantic tables)</button></a>	
+				<button id="SemTableBtn" class="btn btn-primary">Check if Tautology (Semantic tables)</button></a>	
 			</div>
 						
 			<!--a href="bool-f-simplify.html"><button class="btn btn-primary">Simplify Boolean function</button></a!-->	
@@ -95,7 +95,7 @@
 			});
 			
 			$('#Viewer').on("cut copy paste",function(e) {
-				e.preventDefault();
+				//e.preventDefault();
 			});
 					
 			$('button.btn-calc').click(function(e) {
@@ -132,6 +132,37 @@
 				}
 				
 				var url="propositional-truth-table.html?f="+tokens.join("_");
+				window.location.href=url;
+				
+			})
+			
+			
+			$('#SemTableBtn').click(function(){
+				var tokens = viewerToTokens();
+				var prop=new Proposition(tokens);
+				if(typeof(prop.error)!=="undefined") {
+					$("#Err").eq(0).html(prop.error);
+					return;
+				}
+				
+				for(var i=0;i<prop.polish.length;i++) {
+					var token=prop.polish[i];
+					if((token in symbols) || token=="(" || token==")" || token=="and" || token=="or" || token=="imp" || token=="not") {
+						continue;
+					}
+					$("#Err").eq(0).html("Only not, and, or, imply operators are currently allowed for applying semantic table method");
+					return;
+				}
+				
+				try{
+					prop.evaluate();
+				}
+				catch(e) {
+					$("#Err").eq(0).html("Parse error");
+					return;
+				}				
+				
+				var url="propositional-sem-table.html?f="+tokens.join("_");
 				window.location.href=url;
 				
 			})
