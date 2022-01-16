@@ -39,12 +39,23 @@ button.readonlyval {
 }
 
 table.table-black th, table.table-black td {
-	border: 1px solid black; !important;
+	border: 1px solid black !important;
 	
 }
 
 table.table-black {
 	border-color: black;
 	
+}
+
+table.minw td, table.minw th{
+	min-width:30px;
+	text-align:center;
+	padding-left:3px;
+	padding-right:5px;
+}
+
+button.btn-calc {	
+	margin:2px;
 }
 

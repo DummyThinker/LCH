@@ -1,0 +1,189 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>LC Helper</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css"/>
+		<link rel="stylesheet" href="css/main.css"/>
+	</head>
+	
+	<body>
+		<div class="jumbotron text-center">
+			<h2>Propositional calculus</h2>
+			<div class="container">			
+				<div class="row">											
+					<div class="col-sm-3"></div>
+					<input id="Viewer" type="text" class="col-sm-6" style="margin:12px; text-align:right"></input>					
+					<div class="col-sm-3"></div>										
+				</div>
+				<div class="row">
+					<div class="col-sm-3"></div>
+					<button class="btn btn-light col-sm-1 btn-calc">p</button>
+					<button class="btn btn-light col-sm-1 btn-calc">q</button>
+					<button class="btn btn-light col-sm-1 btn-calc">r</button>
+					<button class="btn btn-light col-sm-1 btn-calc">BCK</button>
+					<!--not-->
+					<button class="btn btn-light col-sm-1 btn-calc">&#xac;</button>
+					<!--xor-->
+					<button class="btn btn-light col-sm-1 btn-calc">&#x2295;</button>
+					<div class="col-sm-3"></div>
+				</div>
+				<div class="row">
+					<div class="col-sm-3"></div>
+					<button class="btn btn-light col-sm-1 btn-calc">s</button>
+					<button class="btn btn-light col-sm-1 btn-calc">U</button>
+					<button class="btn btn-light col-sm-1 btn-calc">V</button>
+					<button class="btn btn-light col-sm-1 btn-calc">w</button>
+					<!--and-->
+					<button class="btn btn-light col-sm-1 btn-calc">&#x2227;</button>
+					<!--nand-->
+					<button class="btn btn-light col-sm-1 btn-calc">&#x2191;</button>
+					<div class="col-sm-3"></div>
+				</div>
+				<div class="row">
+					<div class="col-sm-3"></div>
+					<button class="btn btn-light col-sm-1 btn-calc">t</button>
+					<button class="btn btn-light col-sm-1 btn-calc">x</button>
+					<button class="btn btn-light col-sm-1 btn-calc">y</button>
+					<button class="btn btn-light col-sm-1 btn-calc">z</button>
+					<!--or-->
+					<button class="btn btn-light col-sm-1 btn-calc">&#x2228;</button>
+					<!--nor-->
+					<button class="btn btn-light col-sm-1 btn-calc">&#x2193;</button>
+					<div class="col-sm-3"></div>
+				</div>
+				<div class="row">
+					<div class="col-sm-3"></div>
+					<button class="btn btn-light col-sm-1 btn-calc">FNC</button>
+					<button class="btn btn-light col-sm-1 btn-calc">FND</button>
+					<button class="btn btn-light col-sm-1 btn-calc">(</button>
+					<button class="btn btn-light col-sm-1 btn-calc">)</button>
+					<!--imply-->					
+					<button class="btn btn-light col-sm-1 btn-calc">&#x2192;</button>
+					<!--equivalent-->
+					<button class="btn btn-light col-sm-1 btn-calc">&#x2194;</button>
+					<div class="col-sm-3"></div>
+				</div>
+				<div class="row">
+					<div class="col-sm-3"></div>
+					<p id="Err" class="col-sm-6" style="color:red; text-align:left;">..</p>				
+					<div class="col-sm-3"></div>
+				</div>
+				</div>
+				
+				<button id="TruthTableBtn" class="btn btn-primary">Truth table</button>
+				<a href="bool-f-simplify.html"><button class="btn">Check if Tautology (Semantic tables)</button></a>	
+			</div>
+						
+			<!--a href="bool-f-simplify.html"><button class="btn btn-primary">Simplify Boolean function</button></a!-->	
+		</div>
+		
+		
+	</body>	
+	
+	<script src="./js/jquery.min.js"></script>	
+	<script src="./js/bootstrap.min.js"></script>
+	<script src="./js/bootstrap.bundle.js"></script>
+	<script src="./solvers/propositional.js"></script>
+	
+	<script>
+		$(document).ready(function() {
+			$('#Viewer').keypress(function(e){
+				e.preventDefault();
+				return false;
+			});
+			
+			$('#Viewer').on("cut copy paste",function(e) {
+				e.preventDefault();
+			});
+					
+			$('button.btn-calc').click(function(e) {
+				var action = e.target.innerHTML;
+				if(action=='FNC') {
+					console.log(viewerToTokens());
+				}
+				else if(action=='FND') {
+				
+				}
+				else if(action=='BCK') {
+					viewerBack();
+				}
+				else {
+					viewerAdd(action);
+				}				
+			});
+			
+			
+			$('#TruthTableBtn').click(function(){
+				var tokens = viewerToTokens();
+				var prop=new Proposition(tokens);
+				if(typeof(prop.error)!=="undefined") {
+					$("#Err").eq(0).html(prop.error);
+					return;
+				}
+				
+				var url="propositional-truth-table.html?f="+tokens.join("_");
+				window.location.href=url;
+				
+			})
+		});	
+		
+		function viewerAdd(text) {
+			var viewer=$('#Viewer')[0];
+			if(viewer.value.length>0){
+				var lastch=viewer.value[viewer.value.length-1];
+				var lastIsLetter = (/[a-zA-Z]/).test(lastch);
+				var thisIsLetter = (/[a-zA-Z]/).test(text);
+				if(lastIsLetter && thisIsLetter) return;				
+			}			
+			viewer.value+=text;
+		}		
+		
+		function viewerBack(text) {
+			var viewer=$('#Viewer')[0];
+			viewer.value = viewer.value.slice(0, -1);
+		}
+		
+		function viewerToTokens() {
+			var result=[];
+			var text=$('#Viewer')[0].value;
+			for(var i=0;i<text.length;i++) {
+				if((/[a-zA-Z]/).test(text[i])) {
+					result.push(text[i]); continue;
+				}
+				if(text[i]=="(") {
+					result.push("left"); continue;
+				}
+				if(text[i]==")") {
+					result.push("right"); continue;
+				}
+				if(text[i]=="\u00AC") {
+					result.push("not"); continue;
+				}
+				if(text[i]=="\u2295") {
+					result.push("xor"); continue;
+				}
+				if(text[i]=="\u2227") {
+					result.push("and"); continue;
+				}
+				if(text[i]=="\u2228") {
+					result.push("or"); continue;
+				}
+				if(text[i]=="\u2192") {
+					result.push("imp"); continue;
+				}
+				if(text[i]=="\u2194") {
+					result.push("eqv"); continue;
+				}
+				if(text[i]=="\u2191") {
+					result.push("nnd"); continue;
+				}
+				if(text[i]=="\u2193") {
+					result.push("nor"); continue;
+				}								
+			}
+			return result;
+		}
+	</script>
+</html>

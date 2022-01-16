@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>LC Helper</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css"/>
+		<link rel="stylesheet" href="css/main.css"/>
+	</head>
+	
+	<body>
+		<div class="jumbotron text-center">
+			<h2>Truth table</h2>
+			<p>Solving <span id="Expr"></span></p>
+			<center><table id="Table" class="table-bordered minw">
+			
+			</table></center>
+		</div>		
+		
+	</body>	
+	
+	<script src="js/jquery.min.js"></script>	
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/bootstrap.bundle.js"></script>
+	
+	<script src="./solvers/base.js"></script>
+	<script src="./solvers/propositional.js"></script>
+	
+	<script>
+		const tokens = new URLSearchParams(window.location.search).get("f").split("_");
+		console.log(tokens);
+		
+		for(var i=0;i<tokens.length;i++) {
+			$("#Expr")[0].innerHTML += tokenToString(tokens[i]);
+		}		
+		
+		var prop = new Proposition(tokens);
+		console.log(prop.evaluate());
+		console.log(prop.evaldbg);
+		
+		var header=document.createElement("tr");
+		for(var i=0;i<prop.evaldbg.length;i++) {
+			var th=document.createElement("th");
+			th.innerHTML=prop.evaldbg[i][0];
+			header.appendChild(th);
+		}		
+		$("#Table")[0].appendChild(header);
+		
+		var keys=Object.keys(prop.variables);
+		var k = keys.length;
+		var n = Math.pow(2,k);
+		console.log(n);
+		for(var i=0;i<n;i++) {
+			var bits = getBits(i,k);
+			console.log(bits);			
+			for(var j=0;j<k;j++) {
+				prop.variables[keys[j]]=(bits[j]==1);
+			}
+			prop.evaluate();
+			
+			var row=document.createElement("tr");
+			for(var p=0;p<prop.evaldbg.length;p++) {
+				var tr=document.createElement("td");
+				tr.innerHTML=prop.evaldbg[p][1] ? "T" : "F";
+				row.appendChild(tr);
+			}		
+			$("#Table")[0].appendChild(row);
+			
+		}
+				
+		
+	</script>
+	
+</html>
