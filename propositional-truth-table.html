@@ -35,8 +35,8 @@
 		}		
 		
 		var prop = new Proposition(tokens);
-		//console.log(prop.evaluate());
-		//console.log(prop.evaldbg);
+		prop.evaluate();
+		console.log(prop.evaldbg);
 		
 		var header=document.createElement("tr");
 		for(var i=0;i<prop.evaldbg.length;i++) {
