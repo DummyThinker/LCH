@@ -39,10 +39,14 @@
 			window.location.href = "propositional-main.html";
 		}
 		
-		var root = new PropositionalTree(prop).root;
+		var root = new PropositionalTree(prop).root;		
 				
-		$("#Container")[0].appendChild(createSemanticTable(root));
+		var result = new createSemanticTable(root);
+		console.log(result);
+		$("#Container")[0].appendChild(result.ui);
 		
+		$("#Container").append(`<p>Closed branches: ${result.closed_branches}</p>`);
+		$("#Container").append(`<p>Open branches: ${result.open_branches}</p>`);
 	</script>
 	
 </html>

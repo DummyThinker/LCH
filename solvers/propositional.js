@@ -348,6 +348,16 @@ function SemTableNode(tag) {
 	this.children = [];
 }
 
+SemTableNode.prototype.clone = function() {
+	var node = new SemTableNode(this.tag);
+	node.id=this.id;
+	node.formation=[this.formation[0],this.formation[1]];
+	for(var i=0;i<this.children.length;i++) {
+		node.children.push(this.children[i].clone());
+	}
+	return node;
+}
+
 function decompose(root) {
 	if(root.token=="and") {
 		return ["a",root.left,root.right];
@@ -374,7 +384,42 @@ function decompose(root) {
 }
 
 function createSemanticTable(root) {
-	console.log(root.toString());
+	
+	function appendNodesToLeaves(target,nodes,was_alpha=false) {
+		//console.log("Called by",target.id,target.tag.toString());
+		if(target.children.length==0) {
+			for(var i=0;i<nodes.length;i++) {				
+				var new_node = nodes[i].clone();
+				target.children.push(new_node);
+				
+				if(new_node.id>0) {
+					unsolved.push(new_node);
+				}
+				
+				if(was_alpha) {
+					if(new_node.children[0].id>0) {						
+						unsolved.push(new_node.children[0]);
+					}	
+				}				
+			}			
+			return;
+		}
+		for(var i=0;i<target.children.length;i++)
+			appendNodesToLeaves(target.children[i], nodes, was_alpha);
+	}
+	
+	function getMaxDepth(target) {
+		if(target.children.length==0) {
+			return 1;
+		}
+		var d=0;
+		for(var i=0;i<target.children.length;i++) {
+			d=Math.max(d,getMaxDepth(target.children[i]));
+		}
+		return 1+d;
+	}
+	
+	//console.log(root.toString());
 
 	var id=2;
 	var result = new SemTableNode(root);	
@@ -404,24 +449,19 @@ function createSemanticTable(root) {
 				
 				nd1.formation = ["a",node.id];
 				
-				console.log(nd1.formation);
+				//console.log(nd1.formation);
 				nd2.formation = ["x",-1];
 				nd1.children.push(nd2);
 												
-				for(var j=0;j<threads.length;j++) {
-					threads[j].children.push(nd1);
-				}
-				threads=[nd2];
+				//for(var j=0;j<threads.length;j++) {
+				//	threads[j].children.push(nd1);
+				//}
+				//threads=[nd2];
+				//console.log("pushing to",node.id);		
+				appendNodesToLeaves(node,[nd1],true);
 
 				unsolved.splice(i,1);  i--;
-				alphaCnt++;
-				
-				if(!f1.isLiteral()) {
-					unsolved.push(nd1);
-				}
-				if(!f2.isLiteral()) {
-					unsolved.push(nd2);
-				}
+				alphaCnt++;				
 			}
 		}				
 		if(alphaCnt==0) {
@@ -445,39 +485,24 @@ function createSemanticTable(root) {
 					
 					console.log(nd1.formation);					
 													
-					for(var j=0;j<threads.length;j++) {
-						threads[j].children.push(nd1);
-						threads[j].children.push(nd2);
-					}
-					threads=[nd1,nd2];
+					//for(var j=0;j<threads.length;j++) {
+						//threads[j].children.push(nd1);
+						//threads[j].children.push(nd2);
+					//}
+					//threads=[nd1,nd2];
+					appendNodesToLeaves(node,[nd1,nd2],false);
 
 					unsolved.splice(i,1);  i--;
-					alphaCnt++;
-					
-					if(!f1.isLiteral()) {
-						unsolved.push(nd1);
-					}
-					if(!f2.isLiteral()) {
-						unsolved.push(nd2);
-					}
+					betaCnt++;
 				}			
 				
 			}
 		}			
 	}				
 	
-	console.log(result);	
-		
+	//console.log(result);		
 	
-	var depth=1;
-	
-	var node = result;
-	while(node.children.length>0){
-		node = node.children[0];
-		depth++;
-	}
-	depth++;
-	
+	var depth=getMaxDepth(result);
 	
 	var table = document.createElement("table");
 	
@@ -485,81 +510,176 @@ function createSemanticTable(root) {
 		table.appendChild(document.createElement("tr"));
 	}	
 	
-	
-	var threads=1;
-	var node = result;
-	var depth=1;
+	var node = result;	
 	
 	var td = document.createElement("td");
 	td.innerHTML = node.tag.toString() + `&nbsp;&nbsp;&nbsp;<b>(${result.id})</b>`;
 	td.innerHTML = `&nbsp;&nbsp;&nbsp;<b style="color:transparent">(${result.id})</b>` + td.innerHTML;
 	table.children[0].appendChild(td);	
+	table.children[1].appendChild(document.createElement("td"));
+		
+	var stack = [];
+	for(var i=0;i<result.children.length;i++) stack.push([result.children[i],1,0,1,0]);
 	
-	
-	while(node.children.length>0) {				
-		for(var i=0;i<threads;i++) {
-			var td = document.createElement("td");
-			td.innerHTML = node.children[0].tag.toString();			
-			if(node.children[0].id!=0) {
-				td.innerHTML += `&nbsp;&nbsp;&nbsp;<b>(${node.children[0].id})</b>`;
-				td.innerHTML = `&nbsp;&nbsp;&nbsp;<b style="color:transparent">(${node.children[0].id})</b>`+td.innerHTML;
-			}			
-			table.children[2*depth].appendChild(td);
-			
-			
-			var td = document.createElement("td");
-			var f0 = node.children[0].formation[0];
-			var f1 = node.children[0].formation[1];
-			
-			if(f0!="x"){				
-				td.innerHTML = `<i>${f0}(${f1})</i>`;
-				if(f0=='a') {
-					td.innerHTML = `<i style="color:transparent">${f0}(${f1})</i>&nbsp;|&nbsp;<i>${f0}(${f1})</i>`;
-				}
-				else if(f0=='b') {
-					td.innerHTML = `<i style="color:transparent">${f0}(${f1})</i>/&nbsp;   &nbsp;\\<i>${f0}(${f1})</i>`;
-				}
+	var max_magnitude = 1;
+	while(stack.length>0) {
+		var el = stack.shift();
+		var nd=el[0];
+		var row = el[1];
+		var magnitude = el[2];
+		var mgmax = el[3];
+		var initialm = el[4];
+		
+		max_magnitude = Math.max(max_magnitude,mgmax);
+		
+		//console.log(mgmax);
+		
+		while(table.children[2*row].children.length!=mgmax) {
+			table.children[2*row].appendChild(document.createElement("td"));
+			table.children[2*row+1].appendChild(document.createElement("td"));
+		}			
+		
+		
+		var td = table.children[2*row].children[magnitude];
+		td.innerHTML = nd.tag.toString();			
+		if(nd.id!=0) {
+			td.innerHTML += `&nbsp;&nbsp;&nbsp;<b>(${nd.id})</b>`;
+			td.innerHTML = `&nbsp;&nbsp;&nbsp;<b style="color:transparent">(${nd.id})</b>`+td.innerHTML;
+		}					
+		
+		var td = table.children[2*row-1].children[initialm];
+		var f0 = nd.formation[0];
+		var f1 = nd.formation[1];
+		
+		if(f0!="x"){				
+			td.innerHTML = `<i>${f0}(${f1})</i>`;
+			if(f0=='a') {
+				td.innerHTML = `<i style="color:transparent">${f0}(${f1})</i>&nbsp;|&nbsp;<i>${f0}(${f1})</i>`;
 			}
-			else {
-				td.innerHTML="|";
-			}
-			table.children[2*depth-1].appendChild(td);
-			
-			if(node.children.length==2) {
-				var td = document.createElement("td");
-				td.innerHTML = node.children[1].tag.toString();
-				if(node.children[1].id!=0) {
-					td.innerHTML += `&nbsp;&nbsp;&nbsp;<b>(${node.children[1].id})</b>`;
-					td.innerHTML = `&nbsp;&nbsp;&nbsp;<b style="color:transparent">(${node.children[1].id})</b>`+td.innerHTML;
-				}				
-				table.children[2*depth].appendChild(td);
+			else if(f0=='b') {
+				td.innerHTML = `<i style="color:transparent">${f0}(${f1})</i>&nbsp;/&nbsp;   &nbsp;\\&nbsp;<i>${f0}(${f1})</i>`;
 			}
 		}
-		threads*=node.children.length;
+		else {
+			td.innerHTML="|";
+		}		
 		
-		node = node.children[0];
-		depth++;
+		for(var i=0;i<nd.children.length;i++) {
+			stack.push([nd.children[i],row+1,nd.children.length*magnitude+i,mgmax*nd.children.length, magnitude]);
+		}						
 	}
+	
+	var tr = document.createElement("tr");
+	for(var i=0;i<max_magnitude;i++) {
+		tr.appendChild(document.createElement("td"));
+	}
+	table.appendChild(tr);
+	
+	var colscnt = max_magnitude;;
 	
 	for(var i=0;i<table.children.length;i++) {
 		var row = table.children[i];
-		var cnt = depth/row.children.length;
+		var cnt = Math.floor(colscnt/row.children.length);		
 		for(var j=0;j<row.children.length;j++) {			
 			row.children[j].colSpan=cnt;
+			row.children[j].style.width=(100/colscnt)+"%";
 			row.children[j].style.textAlign="center";
 		}
 	}
 	
+	//console.log(colscnt);
+	
+	//console.log(depth);
+	
+	var litcolors = {};
+	var clindex = 0;
+	var colors = ['#880000', '#008800', '#000088', '#880088', '#008888', '#888800'];
+	
+	var open_b = 0;
+	var closed_b = 0;
+	
+	for(var i=0;i<colscnt;i++) {
+		var rid = 2*(depth-1);
+		var literals = [];
+		var j=i;
+		while(rid>=0) {
+			var row = table.children[rid];			
+			if(j>=row.children.length) j=Math.floor(j/2);						
+			var expr=row.children[j].innerHTML;
+			if(expr.length==1) {
+				if(expr in symbols) {
+					literals.push([expr,1,row.children[j]]);
+				}
+			}
+			else if(expr.length==2) {
+				if(expr[0]==tokenToString("not") && (expr[1] in symbols)) {
+					literals.push([expr[1],0,row.children[j]]);
+				}
+			}			
+			rid-=2;
+		}	
+		//console.log(literals);
+		
+		var solved={};		
+		for(var j=0;j<literals.length-1;j++) {
+			if(!solved[literals[j][0]]){
+				for(var k=j+1;k<literals.length;k++) {
+					if(literals[j][0]==literals[k][0] && literals[j][1]!=literals[k][1]) {
+						solved[literals[j][0]]=1;
+						
+						var lit = literals[j][0];
+						if(!(lit in litcolors)) {
+							litcolors[lit]=colors[clindex++];
+						}			
+						
+						literals[j][2].className="literal";
+						literals[k][2].className="literal";
+						
+						literals[j][2].style.color=litcolors[lit];
+						literals[k][2].style.color=litcolors[lit];																
+						
+						//literals[j][2].style.border="1px solid "+litcolors[lit];
+						//literals[k][2].style.border="1px solid "+litcolors[lit];											
+					}
+				}
+			}
+		}
+		
+		if(Object.keys(solved).length>0) {
+			rid = 2*depth;
+			var j=i;
+			while(table.children[rid].children[i].innerHTML=="") {											
+				rid--;
+			}			
+			table.children[rid+1].children[i].innerHTML="|";
+			table.children[rid+2].children[i].innerHTML="<span style='font-size:30px;'>&#119109;</span>";
+			closed_b++;
+		}
+		else {		
+			rid = 2*depth;
+			var j=i;
+			while(table.children[rid].children[i].innerHTML=="") {											
+				rid--;
+			}			
+			table.children[rid+1].children[i].innerHTML="|";
+			table.children[rid+2].children[i].innerHTML="<span style='font-size:18px;'>&#8857;</span>";			
+			open_b++;
+		}			
+	}
 	
 	
-	console.log(table);
+	//console.log(table);
+	
+	table.className="semantic";
 	
 	var center=document.createElement("center");
 	center.appendChild(table);
 	
-	console.log(depth);
+	//console.log(depth);	
 	
-	return center;		
+	this.ui = center;
+	this.open_branches = open_b;
+	this.closed_branches = closed_b;
 }
 
 
