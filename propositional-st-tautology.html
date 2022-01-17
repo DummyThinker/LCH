@@ -45,10 +45,11 @@
 		var root = new PropositionalTree(prop).root;	
 	
 		console.log(root.negate().toString());
-		$("#Neg")[0].innerHTML = root.negate().toString() + "<br/> = ";
+		root=root.negate();
+		$("#Neg")[0].innerHTML = root.toString();
 		//$("#Neg")[0].innerHTML = "<br/> = ";
-		root = propagateNegation(root.negate(),true);
-		$("#Neg")[0].innerHTML += root.toString();
+		//root = propagateNegation(root.negate(),true);
+		//$("#Neg")[0].innerHTML += root.toString();
 				
 		var result = new createSemanticTable(root);
 		console.log(result);
