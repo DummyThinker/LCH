@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>LC Helper</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css"/>
+		<link rel="stylesheet" href="css/main.css"/>
+	</head>
+	
+	<body>
+		<div class="jumbotron text-center" id="Container">
+			<h2>Tautology</h2>			
+			<p>Solving by semantic table: <span id="Expr"></span></p>				
+			<h5>Negation:</h5>			
+			<p id="Neg"></p>
+			<h5>Table:</h5>
+		</div>		
+		
+	</body>	
+	
+	<script src="js/jquery.min.js"></script>	
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/bootstrap.bundle.js"></script>
+	
+	<script src="./solvers/base.js"></script>
+	<script src="./solvers/propositional.js"></script>
+	
+	<script>
+		const tokens = new URLSearchParams(window.location.search).get("f").split("_");
+		//console.log(tokens);
+		
+		for(var i=0;i<tokens.length;i++) {
+			$("#Expr")[0].innerHTML += tokenToString(tokens[i]);
+		}		
+		
+		var prop = new Proposition(tokens);
+		try{
+			prop.evaluate();
+		}
+		catch(e) {
+			window.location.href = "propositional-main.html";
+		}
+		
+		var root = new PropositionalTree(prop).root;	
+	
+		console.log(root.negate().toString());
+		$("#Neg")[0].innerHTML = root.negate().toString() + "<br/> = ";
+		//$("#Neg")[0].innerHTML = "<br/> = ";
+		root = propagateNegation(root.negate(),true);
+		$("#Neg")[0].innerHTML += root.toString();
+				
+		var result = new createSemanticTable(root);
+		console.log(result);
+		$("#Container")[0].appendChild(result.ui);
+		
+		$("#Container").append(`<p>Closed branches: ${result.closed_branches}</p>`);
+		$("#Container").append(`<p>Open branches: ${result.open_branches}</p>`);
+	</script>
+	
+</html>

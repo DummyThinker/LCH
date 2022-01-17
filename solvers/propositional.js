@@ -500,7 +500,7 @@ function createSemanticTable(root) {
 		}			
 	}				
 	
-	//console.log(result);		
+	console.log(result);		
 	
 	var depth=getMaxDepth(result);
 	
@@ -519,7 +519,7 @@ function createSemanticTable(root) {
 	table.children[1].appendChild(document.createElement("td"));
 		
 	var stack = [];
-	for(var i=0;i<result.children.length;i++) stack.push([result.children[i],1,0,1,0]);
+	for(var i=0;i<result.children.length;i++) stack.push([result.children[i],1,i,result.children.length,0]);
 	
 	var max_magnitude = 1;
 	while(stack.length>0) {
@@ -569,11 +569,13 @@ function createSemanticTable(root) {
 		}						
 	}
 	
-	var tr = document.createElement("tr");
-	for(var i=0;i<max_magnitude;i++) {
-		tr.appendChild(document.createElement("td"));
+	for(var x=0;x<3;x++) {
+		var tr = document.createElement("tr");
+		for(var i=0;i<max_magnitude;i++) {
+			tr.appendChild(document.createElement("td"));
+		}
+		table.appendChild(tr);
 	}
-	table.appendChild(tr);
 	
 	var colscnt = max_magnitude;;
 	
@@ -618,7 +620,7 @@ function createSemanticTable(root) {
 			}			
 			rid-=2;
 		}	
-		//console.log(literals);
+		console.log(literals);
 		
 		var solved={};		
 		for(var j=0;j<literals.length-1;j++) {
@@ -645,32 +647,75 @@ function createSemanticTable(root) {
 			}
 		}
 		
+		try{
 		if(Object.keys(solved).length>0) {
-			rid = 2*depth;
+			rid = 2*depth+2;
 			var j=i;
-			while(table.children[rid].children[i].innerHTML=="") {											
+			while(table.children[rid].children[j].innerHTML=="") {		
+				if(j>=table.children[rid-1].children.length) j=Math.floor(j/2);
 				rid--;
+			}
+			
+			var target=table.children[rid].children[j];
+			
+			var cell=table.children[rid+1].children[j];
+						
+			var label = target.innerHTML.slice();
+			if(label.length==2) label=label[1];
+			if(label in symbols){
+				cell.innerHTML="|<br/><span style='font-size:30px;display:block;transform:translateY(-17px);'>&#119109;</span>";				
+				cell.rowSpan=2;
+				closed_b++;
 			}			
-			table.children[rid+1].children[i].innerHTML="|";
-			table.children[rid+2].children[i].innerHTML="<span style='font-size:30px;'>&#119109;</span>";
-			closed_b++;
 		}
 		else {		
-			rid = 2*depth;
+			rid = 2*depth+2;
 			var j=i;
-			while(table.children[rid].children[i].innerHTML=="") {											
+			while(table.children[rid].children[j].innerHTML=="") {		
+				if(j>=table.children[rid-1].children.length) j=Math.floor(j/2);
 				rid--;
 			}			
-			table.children[rid+1].children[i].innerHTML="|";
-			table.children[rid+2].children[i].innerHTML="<span style='font-size:18px;'>&#8857;</span>";			
-			open_b++;
-		}			
+			
+			var target=table.children[rid].children[j];
+			console.log(target);
+			
+			var cell=table.children[rid+1].children[j];
+					
+			var label = target.innerHTML.slice();
+			if(label.length==2) label=label[1];
+			if(label in symbols){
+				cell.innerHTML="|<br/><span style='font-size:18px;'>&#8857;</span>";				
+				cell.rowSpan=2;
+				open_b++;
+			}			
+		}
+		}catch(e){throw e;}
 	}
 	
+	for(var i=0;i<table.children.length-1;i++) {
+		var row = table.children[i];
+		for(var j=0;j<row.children.length;j++) {
+			var cell = row.children[j];
+			if(cell.rowSpan==2) {
+				try{ // should remove empty lines but nah					
+					var next_row = table.children[i+1];
+					
+					var cnt=next_row.children.length-1;
+					while(cnt>=0 && next_row.children[cnt].innerHTML!="") cnt--;
+					if(cnt>=0) next_row.removeChild(next_row.children[cnt]);
+					
+					var cnt=next_row.children.length-1;
+					while(cnt>=0 && next_row.children[cnt].innerHTML!="") cnt--;
+					if(cnt>=0) next_row.removeChild(next_row.children[cnt]);
+					
+				}catch(e){};
+			}
+		}
+	}	
 	
 	//console.log(table);
 	
-	table.className="semantic";
+	table.className="semantic";// table-black";
 	
 	var center=document.createElement("center");
 	center.appendChild(table);
@@ -685,7 +730,7 @@ function createSemanticTable(root) {
 
 function tokenToString(token) {	
 	if(token== "left") return "(";
-	if(token=="right") return ")";	
+	if(token=="right") return ")";
 	if(token=="not") return "\u00AC"; 	
 	if(token=="xor") return "\u2295";
 	if(token=="and") return "\u2227";

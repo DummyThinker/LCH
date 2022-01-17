@@ -73,7 +73,8 @@
 				</div>
 				
 				<button id="TruthTableBtn" class="btn btn-primary">Truth table</button>
-				<button id="SemTableBtn" class="btn btn-primary">Create Semantic tables</button></a>	
+				<button id="SemTableBtn" class="btn btn-primary">Create Semantic tables</button>
+				<button id="SemTableTautBtn" class="btn btn-primary">Check for Tautology (Semantic tables)</button>
 			</div>
 						
 			<!--a href="bool-f-simplify.html"><button class="btn btn-primary">Simplify Boolean function</button></a!-->	
@@ -166,7 +167,38 @@
 				window.location.href=url;
 				
 			})
+			
+			$('#SemTableTautBtn').click(function(){
+				var tokens = viewerToTokens();
+				var prop=new Proposition(tokens);
+				if(typeof(prop.error)!=="undefined") {
+					$("#Err").eq(0).html(prop.error);
+					return;
+				}
+				
+				for(var i=0;i<prop.polish.length;i++) {
+					var token=prop.polish[i];
+					if((token in symbols) || token=="(" || token==")" || token=="and" || token=="or" || token=="imp" || token=="not") {
+						continue;
+					}
+					$("#Err").eq(0).html("Only not, and, or, imply operators are currently allowed for applying semantic table method");
+					return;
+				}
+				
+				try{
+					prop.evaluate();
+				}
+				catch(e) {
+					$("#Err").eq(0).html("Parse error");
+					return;
+				}				
+				
+				var url="propositional-st-tautology.html?f="+tokens.join("_");
+				window.location.href=url;
+				
+			})
 		});	
+		
 		
 		function viewerAdd(text) {
 			var viewer=$('#Viewer')[0];
